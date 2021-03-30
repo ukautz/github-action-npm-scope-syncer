@@ -1,0 +1,38 @@
+{
+  "name": "@ukautz/github-action-npm-scope-syncer",
+  "version": "0.1.0",
+  "description": "Release a new NPM package version with updated set of scopes",
+  "main": "lib/syncer.js",
+  "directories": {
+    "bin": "bin",
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc --noEmit && jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ukautz/github-action-npm-scope-syncer.git"
+  },
+  "keywords": [
+    "github",
+    "action"
+  ],
+  "author": "Ulrich Kautz",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ukautz/github-action-npm-scope-syncer/issues"
+  },
+  "homepage": "https://github.com/ukautz/github-action-npm-scope-syncer#readme",
+  "dependencies": {
+    "semver": "^7.3.5",
+    "typescript": "^4.2.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.22",
+    "jest": "^26.6.3",
+    "ts-jest": "^26.5.4"
+  }
+}

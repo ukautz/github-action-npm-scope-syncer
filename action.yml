@@ -1,0 +1,66 @@
+# action.yml
+name: 'NPM package scope syncer'
+description: 'Release a new NPM package version with updated set of scopes'
+inputs:
+  scopes: # id of input
+    description: Space separated list of package scopes or names that are to be updated
+    required: true
+  tagName:
+    description: 'Format of name of the git tag on the commit that create a new the version with the updated scopes (default: `%NEW_VERSION%`)'
+    required: false
+  push:
+    description: 'Whether to push resulting commit and tag (default: `0`, type: boolean, like `true`, `1`, `false`, `0`)'
+    required: false
+  enforcePinning:
+    description: 'Whether to enforce version pinning for the updated packages of the defined scopes (default: `0`, type: boolean, like `true`, `1`, `false`, `0`)'
+    required: false
+  updatePeerDependencies:
+    description: 'Whether to update all peer dependency package versions (default: `0`, type: boolean, like `true`, `1`, `false`, `0`)'
+    required: false
+  successMessage:
+    description: 'Subject of the commit of a successful update (default: `Scopes updated, new version %NEW_VERSION% created`)'
+    required: false
+  failBranch:
+    description: 'Name of failing branch, in case the tests fail after scope updates (default: `update-fail/%OLD_VERSION%-to-%NEW_VERSION%-%YMD%`)'
+    required: false
+  failMessage:
+    description: 'Subject of PR of failed scope update (default: `Failed tests for update from %OLD_VERSION% to %NEW_VERSION%`)'
+    required: false
+  commandInstall:
+    description: 'Command to run install (default: `npm install`)'
+    required: false
+  commandTest:
+    description: 'Command to run tests (default: `npm run test`)'
+    required: false
+  commandPublish:
+    description: 'Command to publish package to NPM repository (default: not set)'
+    required: false
+  createRelease:
+    description: 'Whether to create a release (default: `0`, type: boolean, like `true`, `1`, `false`, `0`)'
+    required: false
+  semver:
+    description: 'SEMVER level that is to be increased for the new package version (default: `minor`, allowed: `major`, `minor`, `patch`)'
+    required: false
+  versionFromPackage:
+    description: Name of the package to get the version from - if set then `semver` is ignored
+    required: false
+  versionPrefix:
+    description: Prefix to prepend version with
+    required: false
+  versionSuffix:
+    description: Suffix to append version with
+    required: false
+  debug:
+    description: 'Enable debug output in execution (default: `0`, type: boolean, like `true`, `1`, `false`, `0`)'
+    required: false
+
+outputs:
+  status:
+    description: 'Describes the end status (success can be: `updated`, `up2date` or `found`)'
+  newVersion:
+    description: New (next) version of the package
+  oldVersion:
+    description: Old (current) version of the package
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
