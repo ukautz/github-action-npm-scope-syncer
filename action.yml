@@ -1,6 +1,10 @@
 # action.yml
 name: 'NPM package scope syncer'
-description: 'Release a new NPM package version with updated set of scopes'
+description: 'Release a new NPM package version with updated set of package scopes and packages'
+author: Ulrich Kautz
+branding:
+  icon: package
+  color: purple
 inputs:
   scopes: # id of input
     description: Space separated list of package scopes or names that are to be updated
