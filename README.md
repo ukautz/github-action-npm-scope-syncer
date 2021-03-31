@@ -4,9 +4,9 @@
 steps:
   # --%<--
   - name: Update AWS dependencies
-    uses: @ukautz/github-action-npm-scope-syncer
+    uses: ukautz/github-action-npm-scope-syncer@v0.4
     with:
-      scopes: "@acme @foobar"
+      scopes: '@acme @foobar'
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -14,30 +14,45 @@ steps:
 This is what I use to update AWS CDK libraries and applications and align the package version with `@aws-cdk/core`:
 
 ```yaml
-steps:
-  # --%<--
-  - name: Update AWS dependencies
-    id: syncer
-    uses: @ukautz/github-action-npm-scope-syncer
-    with:
-      scopes: "aws-cdk @aws-cdk"
-      updatePeerDependencies: "true"
-      enforcePinning: "true"
-      push: true
-      versionFromPackage: "@aws-cdk/core"
-      versionSuffix: "-alpha1"
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  - name: Publish to Github Packages
-    if: steps.syncer.status == "updated"
-    uses: actions/setup-node@v2
-      with:
-        node-version: '14'
-        registry-url: 'https://npm.pkg.github.com'
-    run: |
-      npm install
-      npm run build
-      npm publish
+name: Update AWS CDK packages
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  release:
+    name: Release with updated AWS CDK packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Update AWS CDK package dependencies
+        id: syncer
+        uses: ukautz/github-action-npm-scope-syncer@v0.4
+        with:
+          scopes: '@aws-cdk'
+          updatePeerDependencies: 'true'
+          enforcePinning: 'true'
+          push: 'true'
+          versionFromPackage: '@aws-cdk/core'
+          versionSuffix: '-alpha1'
+          tagName: 'v%NEW_VERSION%'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Github Package environment
+        if: steps.syncer.status == 'updated'
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Publish to Github Packages
+        if: steps.syncer.status == 'updated'
+        run: |
+          npm install
+          npm run build
+          npm publish
 ```
 
 ## Environment
