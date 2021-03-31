@@ -67,4 +67,4 @@ outputs:
     description: Old (current) version of the package
 runs:
   using: 'docker'
-  image: 'Dockerfile'
+  image: 'docker://ukautz/github-action-npm-scope-syncer:v0.5'
