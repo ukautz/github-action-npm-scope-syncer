@@ -4,7 +4,7 @@
 steps:
   # --%<--
   - name: Update AWS dependencies
-    uses: ukautz/github-action-npm-scope-syncer@v0.7.0
+    uses: ukautz/github-action-npm-scope-syncer@v0.7.1
     with:
       scopes: '@acme @foobar'
     env:
@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Update AWS CDK package dependencies
         id: syncer
-        uses: ukautz/github-action-npm-scope-syncer@v0.7.0
+        uses: ukautz/github-action-npm-scope-syncer@v0.7.1
         with:
           scopes: '@aws-cdk'
           updatePeerDependencies: 'true'
