@@ -23,11 +23,11 @@ export class Package {
   }
 
   public increase(semver: 'major' | 'minor' | 'patch') {
-    const ver: string[] = (this.content['version'] as string).split('.');
+    const parts: string[] = (this.content['version'] as string).split('.');
     const index = { major: 0, minor: 1, patch: 2 }[semver];
-    const parsed = versionNumber(ver[index]!);
-    ver[index] = `${parsed.prefix}${parsed.num + 1}${parsed.suffix}`;
-    return ver.join('.');
+    const parsed = versionNumber(parts[index]!);
+    parts[index] = `${parsed.prefix}${parsed.num + 1}${parsed.suffix}`;
+    return parts.join('.');
   }
 
   public pinnedDependencies(scopes: string[], name?: string): Record<string, string> {

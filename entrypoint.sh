@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 # dependencies:
 if [ -z $GITHUB_REF ]; then
@@ -64,15 +64,28 @@ fi
 git config --global user.name 'Github Actions'
 git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
 
-# run install of packages
+# determine current version
+OLD_VERSION=$(cat package.json | jq '.version' -r)
+
+# run install of (current version) packages
 $INPUT_COMMANDINSTALL
 
-# update package version
+# update packages of defined scopes
+OUTPUT_STATUS="error-failed-scope-update"
+HASH_BEFORE=$(md5sum package.json | awk '{print $1}')
+for scope in $(echo "$INPUT_SCOPES" | tr " " "\n" | grep '^@'); do
+    npx update-by-scope "$scope" npm install
+done
+for scope in $(echo "$INPUT_SCOPES" | tr " " "\n" | grep -v '^@'); do
+    npm install "${scope}@latest"
+done
+
+# determine new (next) package version
 OUTPUT_STATUS="error-failed-version-update"
-OLD_VERSION=$(cat package.json | jq '.version' -r)
 pushd /app
 NEW_VERSION=$(bin/version-update.ts)
 popd
+cat package.json
 
 NOW=$(date +"%Y%m%d")
 function template() {
@@ -83,20 +96,10 @@ function template() {
 export GIT_TAG=$(template "$INPUT_TAGNAME")
 if git tag -l | grep -qe "^${GIT_TAG}\$"; then
     OUTPUT_STATUS="found"
-    git checkout package.json
+    git checkout package.json package-lock.json
     echo "Tag $GIT_TAG already found, no need to continue"
     exit 0
 fi
-
-# update all defined scopes
-OUTPUT_STATUS="error-failed-scope-update"
-HASH_BEFORE=$(md5sum package.json | awk '{print $1}')
-for scope in $(echo "$INPUT_SCOPES" | tr " " "\n" | grep '^@'); do
-    npx update-by-scope "$scope" npm install
-done
-for scope in $(echo "$INPUT_SCOPES" | tr " " "\n" | grep -v '^@'); do
-    npm install "${scope}@latest"
-done
 
 # fix up dependecies
 OUTPUT_STATUS="error-failed-fix-dependencies"
@@ -104,9 +107,9 @@ pushd /app
 bin/fix-dependencies.ts
 popd
 
-HASH_AFTER=$(md5sum package.json | awk '{print $1}')
 
 # bail out if no changes
+HASH_AFTER=$(md5sum package.json | awk '{print $1}')
 if [ "$HASH_BEFORE" == "$HASH_AFTER" ]; then
     OUTPUT_STATUS="up2date"
     git checkout package.json package-lock.json
@@ -120,8 +123,8 @@ TEST_OUTPUT=$(mktemp)
 template "$INPUT_FAILMESSAGE" > $TEST_OUTPUT
 echo -e "\n\n\`\`\`\n" >> $TEST_OUTPUT
 set +e
-$INPUT_COMMANDTEST | tee -a $TEST_OUTPUT
-TEST_RESULT=$?
+$INPUT_COMMANDTEST |& tee -a $TEST_OUTPUT
+TEST_RESULT=${PIPESTATUS[0]}
 set -e
 echo -e "\n\`\`\`\n\n# end $(date)\n" >> $TEST_OUTPUT
 
