@@ -139,7 +139,7 @@ if [ $TEST_RESULT -gt 0 ]; then
     git push origin "$FAIL_BRANCH"
 
     # create PR for branch
-    gh pr create --base "$CODE_BRANCH" --head "$FAIL_BRANCH" --label --draft --fill
+    gh pr create --base "$CODE_BRANCH" --head "$FAIL_BRANCH" --label scope-update-fail --draft --fill
     OUTPUT_STATUS="error-tests-failed"
     exit 1
 fi
