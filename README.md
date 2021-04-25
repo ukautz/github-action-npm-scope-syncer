@@ -4,17 +4,19 @@
 steps:
   # --%<--
   - name: Update AWS dependencies
-    uses: ukautz/github-action-npm-scope-syncer@v0.7.1
+    uses: ukautz/github-action-npm-scope-syncer@v0.7.2
     with:
       scopes: '@acme @foobar'
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+### Publish to Github Packages afterwards
+
 This is what I use to update AWS CDK libraries and applications and align the package version with `@aws-cdk/core`:
 
 ```yaml
-name: Update AWS CDK packages
+name: Sync with AWS CDK release version
 
 on:
   schedule:
@@ -23,36 +25,79 @@ on:
 
 jobs:
   release:
-    name: Release with updated AWS CDK packages
+    name: Publish to Github Packages
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
       - name: Update AWS CDK package dependencies
         id: syncer
-        uses: ukautz/github-action-npm-scope-syncer@v0.7.1
+        uses: ukautz/github-action-npm-scope-syncer@v0.7.2
         with:
           scopes: '@aws-cdk'
+          versionFromPackage: '@aws-cdk/core'
+          versionSuffix: '-alpha1'
           updatePeerDependencies: 'true'
           enforcePinning: 'true'
           push: 'true'
-          versionFromPackage: '@aws-cdk/core'
-          versionSuffix: '-alpha1'
           tagName: 'v%NEW_VERSION%'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup Github Package environment
-        if: steps.syncer.status == 'updated'
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Optional, e.g. for libraries to then publish a NPM package on Github packages
+      - name: Setup Github Packages Node Environment
+        if: steps.syncer.outputs.status == 'updated'
         uses: actions/setup-node@v2
         with:
           node-version: '14'
           registry-url: 'https://npm.pkg.github.com'
       - name: Publish to Github Packages
-        if: steps.syncer.status == 'updated'
+        if: steps.syncer.outputs.status == 'updated'
         run: |
+          set -e
           npm install
           npm run build
           npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### Update CDK project
+
+So that a new patch version is created whenever a new AWS CDK version is released and passes the tests
+
+```yaml
+name: Keep AWS CDK project up2date
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  release:
+    name: Update AWS CDK packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+      - name: Release new version on updated AWS CDK dependencies
+        uses: ukautz/github-action-npm-scope-syncer@v0.7.2
+        with:
+          scopes: '@aws-cdk aws-cdk'
+          semver: 'patch'
+          enforcePinning: 'true'
+          createRelease: 'true'
+          push: 'true'
+          tagName: 'v%NEW_VERSION%'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Environment

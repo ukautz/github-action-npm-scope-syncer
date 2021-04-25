@@ -1,6 +1,6 @@
 {
   "name": "@ukautz/github-action-npm-scope-syncer",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Release a new NPM package version with updated set of scopes",
   "main": "lib/syncer.js",
   "directories": {

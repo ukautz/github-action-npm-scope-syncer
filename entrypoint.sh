@@ -16,7 +16,7 @@ INPUT_TAGNAME=${INPUT_TAGNAME:-%NEW_VERSION%}
 INPUT_PUSH=${INPUT_PUSH:-0}
 INPUT_CREATERELEASE=${INPUT_CREATERELEASE:-0}
 INPUT_SUCCESSMESSAGE=${INPUT_SUCCESSMESSAGE:-Scopes updated, new version %NEW_VERSION% created}
-INPUT_FAILBRANCH=${INPUT_FAILBRANCH:-update-fail/%OLD_VERSION%-to-%NEW_VERSION%-%YMD%}
+INPUT_FAILBRANCH=${INPUT_FAILBRANCH:-update-fail/%OLD_VERSION%-to-%NEW_VERSION%}
 INPUT_FAILMESSAGE=${INPUT_FAILMESSAGE:-Failed tests for update from %OLD_VERSION% to %NEW_VERSION%}
 INPUT_COMMANDINSTALL=${INPUT_COMMANDINSTALL:-npm install}
 INPUT_COMMANDTEST=${INPUT_COMMANDTEST:-npm run test}
@@ -36,6 +36,7 @@ OUTPUT_STATUS=""
 OLD_VERSION="unknown"
 NEW_VERSION="unknown"
 function output() {
+    echo "::debug::Writing status=${OUTPUT_STATUS}, oldVersion=${OLD_VERSION}, newVersion=${NEW_VERSION}"
     echo "::set-output name=status::${OUTPUT_STATUS}"
     echo "::set-output name=oldVersion::${OLD_VERSION}"
     echo "::set-output name=newVersion::${NEW_VERSION}"
@@ -131,8 +132,15 @@ echo -e "\n\`\`\`\n\n# end $(date)\n" >> $TEST_OUTPUT
 # if test failed -> create PR
 if [ $TEST_RESULT -gt 0 ]; then
     OUTPUT_STATUS="error-failed-test-fail-handling"
-    # add all to new branch
+
+    # add all to new branch, unless that already exists
+    REMOTE_NAME=$(git remote | head -1)
     FAIL_BRANCH=$(template "$INPUT_FAILBRANCH")
+    if git branch -r | grep -q "^\s*${REMOTE_NAME}/${FAIL_BRANCH}\$"; then
+        OUTPUT_STATUS="error-tests-failed-skipped"
+        exit 1
+    fi
+
     git checkout -b $FAIL_BRANCH
     git add -A
     git commit --file $TEST_OUTPUT
