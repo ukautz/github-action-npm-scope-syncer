@@ -4,7 +4,7 @@
 steps:
   # --%<--
   - name: Update AWS dependencies
-    uses: ukautz/github-action-npm-scope-syncer@v0.7.2
+    uses: ukautz/github-action-npm-scope-syncer@v0.7.3
     with:
       scopes: '@acme @foobar'
     env:
@@ -34,7 +34,7 @@ jobs:
           fetch-depth: '0'
       - name: Update AWS CDK package dependencies
         id: syncer
-        uses: ukautz/github-action-npm-scope-syncer@v0.7.2
+        uses: ukautz/github-action-npm-scope-syncer@v0.7.3
         with:
           scopes: '@aws-cdk'
           versionFromPackage: '@aws-cdk/core'
@@ -87,7 +87,7 @@ jobs:
         with:
           fetch-depth: '0'
       - name: Release new version on updated AWS CDK dependencies
-        uses: ukautz/github-action-npm-scope-syncer@v0.7.2
+        uses: ukautz/github-action-npm-scope-syncer@v0.7.3
         with:
           scopes: '@aws-cdk aws-cdk'
           semver: 'patch'
